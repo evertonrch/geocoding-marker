@@ -20,23 +20,46 @@ interface NominatimGeocoding {
     [key: string]: string | number // Outros campos opcionais
 }
 
+interface StatusMessage {
+    status: number
+    message: string
+    data_updated: string
+}
+
+// verifica se o serviço está disponível
+const getStatusService = async (): Promise<boolean> => {
+    const response = (await axios.get<StatusMessage>("https://nominatim.openstreetmap.org/status?format=json"))
+    const data = response && response.data
+    if (data.message === "OK") {
+        return true
+    }
+    return false
+}
+
+const addMarker = (latitude: number, longitude: number, description: string): void => {
+    const expression: L.LatLngExpression = [latitude, longitude]
+    L.marker(expression).addTo(map)
+        .bindPopup(description)
+        .openPopup()
+}
+
 const renderMap = (place: NominatimGeocoding, zoom: number = 7): void => {
     map.setView([place.lat, place.lon], zoom)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 15,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map)
-    const marker = L.marker([place.lat, place.lon]).addTo(map);
-    marker.bindPopup(place.display_name).openPopup();
+
+    addMarker(place.lat, place.lon, place.display_name)
 }
 
 const getData = async (url: string): Promise<NominatimGeocoding[]> => {
     const response = await axios.get<NominatimGeocoding[]>(url)
 
-    if(response.status !== 200 || response.data.length == 0) {
+    if (response.status !== 200 || response.data.length == 0) {
         throw new Error(`data not fount ${response.data}`)
     }
-    
+
     console.log(response)
     return response.data
 }
@@ -52,22 +75,24 @@ const searchAddressHandler = async (e: Event) => {
     }
 
     try {
-        const data = await getData(`https://nominatim.openstreetmap.org/search?q=${encodeURI(enteredAddress)}&format=json`) 
-        
+        const isActive = await getStatusService()
+        if (!isActive) {
+            throw new Error("service unavailable")
+        }
+
+        const data = await getData(`https://nominatim.openstreetmap.org/search?q=${encodeURI(enteredAddress)}&format=json`)
         data.forEach(element => {
             const addressType = element.addresstype
             // renderiza localidades por tipo de território
-            if(addressType === AddressType.CITY || addressType === AddressType.STATE) {
+            if (addressType === AddressType.CITY || addressType === AddressType.STATE) {
                 renderMap(element)
-            } else {
-                alert(`Territory type not supported yet. (${addressType})`)
             }
         })
-    } catch(err) {
-        alert(err)    
+    } catch (err) {
+        alert(err)
     }
 
     addressInput.value = ""
 }
-    
+
 form.addEventListener("submit", searchAddressHandler)
