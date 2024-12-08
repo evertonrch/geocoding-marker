@@ -1,5 +1,7 @@
 import axios from "axios"
 import * as L from "leaflet"
+import NominatimGeocoding from "./core/nominatim-geocoding.js"
+import StatusMessage from "./core/status-message.js"
 
 const form = document.querySelector("form") as HTMLFormElement
 const addressInput = document.querySelector("#address") as HTMLInputElement
@@ -7,23 +9,9 @@ const mapElement = document.querySelector("#map") as HTMLDivElement
 
 const map = L.map(mapElement)
 
-enum AddressType {
+const enum AddressType {
     CITY = "city",
     STATE = "state"
-}
-
-interface NominatimGeocoding {
-    lat: number
-    lon: number
-    display_name: string
-    addresstype: string
-    [key: string]: string | number // Outros campos opcionais
-}
-
-interface StatusMessage {
-    status: number
-    message: string
-    data_updated: string
 }
 
 // verifica se o serviço está disponível
@@ -59,8 +47,7 @@ const getData = async (url: string): Promise<NominatimGeocoding[]> => {
     if (response.status !== 200 || response.data.length == 0) {
         throw new Error(`data not fount ${response.data}`)
     }
-
-    console.log(response)
+    
     return response.data
 }
 
