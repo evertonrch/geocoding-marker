@@ -12,6 +12,12 @@ enum AddressType {
     STATE = "state"
 }
 
+interface StatusMessage {
+    status: number
+    message: string
+    data_updated: string
+}
+
 interface NominatimGeocoding {
     lat: number
     lon: number
@@ -20,14 +26,31 @@ interface NominatimGeocoding {
     [key: string]: string | number // Outros campos opcionais
 }
 
+// verifica se o serviço está disponível
+const getStatusService = async (): Promise<boolean> => {
+    const response = (await axios.get<StatusMessage>("https://nominatim.openstreetmap.org/status?format=json"))
+    const data = response && response.data
+    if(data.message === "OK"){
+        return true
+    }
+    return false
+}
+
+const addMarker = (latitude: number, longitude: number, description: string): void => {
+    const expression: L.LatLngExpression = [latitude, longitude]
+    L.marker(expression).addTo(map)
+        .bindPopup(description)
+        .openPopup()
+}
+
 const renderMap = (place: NominatimGeocoding, zoom: number = 7): void => {
     map.setView([place.lat, place.lon], zoom)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 15,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map)
-    const marker = L.marker([place.lat, place.lon]).addTo(map);
-    marker.bindPopup(place.display_name).openPopup();
+    
+    addMarker(place.lat, place.lon, place.display_name)
 }
 
 const getData = async (url: string): Promise<NominatimGeocoding[]> => {
@@ -37,7 +60,6 @@ const getData = async (url: string): Promise<NominatimGeocoding[]> => {
         throw new Error(`data not fount ${response.data}`)
     }
     
-    console.log(response)
     return response.data
 }
 
@@ -52,6 +74,11 @@ const searchAddressHandler = async (e: Event) => {
     }
 
     try {
+        const isActive = await getStatusService()
+        if(!isActive) {
+            throw new Error("service unavailable")
+        }
+
         const data = await getData(`https://nominatim.openstreetmap.org/search?q=${encodeURI(enteredAddress)}&format=json`) 
         
         data.forEach(element => {
