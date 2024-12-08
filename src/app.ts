@@ -82,9 +82,12 @@ const searchAddressHandler = async (e: Event) => {
         const data = await getData(`https://nominatim.openstreetmap.org/search?q=${encodeURI(enteredAddress)}&format=json`) 
         
         data.forEach(element => {
+            const addressType = element.addresstype
             // renderiza localidades por tipo de território
-            if(element.addresstype === AddressType.CITY || element.addresstype === AddressType.STATE) {
+            if(addressType === AddressType.CITY || addressType === AddressType.STATE) {
                 renderMap(element)
+            } else {
+                alert(`Territory type not supported yet. (${addressType})`)
             }
         })
     } catch(err) {
