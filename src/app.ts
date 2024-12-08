@@ -41,13 +41,18 @@ const renderMap = (place: NominatimGeocoding, zoom: number = 7): void => {
     addMarker(place.lat, place.lon, place.display_name)
 }
 
+const clearInputAddress = (): void => {
+    addressInput.value = ""
+    addressInput.focus()
+}
+
 const getData = async (url: string): Promise<NominatimGeocoding[]> => {
     const response = await axios.get<NominatimGeocoding[]>(url)
 
     if (response.status !== 200 || response.data.length == 0) {
         throw new Error(`data not fount ${response.data}`)
     }
-    
+
     return response.data
 }
 
@@ -58,6 +63,7 @@ const searchAddressHandler = async (e: Event) => {
 
     if (!enteredAddress) {
         alert("please, enter a address")
+        clearInputAddress()
         return
     }
 
@@ -77,9 +83,10 @@ const searchAddressHandler = async (e: Event) => {
         })
     } catch (err) {
         alert(err)
+        clearInputAddress()
     }
 
-    addressInput.value = ""
+    clearInputAddress()
 }
 
 form.addEventListener("submit", searchAddressHandler)
