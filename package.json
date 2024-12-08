@@ -11,7 +11,7 @@
     "typescript",
     "course"
   ],
-  "author": "Maximilian Schwarzmüller",
+  "author": "Everton Rocha",
   "license": "ISC",
   "devDependencies": {
     "@types/leaflet": "^1.9.15",
