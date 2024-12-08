@@ -33,9 +33,9 @@ const addMarker = (latitude: number, longitude: number, description: string): vo
 
 const renderMap = (place: NominatimGeocoding, zoom: number = 7): void => {
     map.setView([place.lat, place.lon], zoom)
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 15,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 20
     }).addTo(map)
 
     addMarker(place.lat, place.lon, place.display_name)
