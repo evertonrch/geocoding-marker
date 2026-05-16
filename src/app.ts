@@ -18,10 +18,7 @@ const enum AddressType {
 const getStatusService = async (): Promise<boolean> => {
     const response = (await axios.get<StatusMessage>("https://nominatim.openstreetmap.org/status?format=json"))
     const data = response && response.data
-    if (data.message === "OK") {
-        return true
-    }
-    return false
+    return data.message === "OK"
 }
 
 const addMarker = (latitude: number, longitude: number, description: string): void => {
